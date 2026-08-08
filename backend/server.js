@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import Groq from 'groq-sdk';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import bcrypt from 'bcrypt';
 import db from './db.js';
 import { OAuth2Client } from 'google-auth-library';
@@ -43,30 +43,14 @@ const GROQ_MODEL = 'llama-3.1-8b-instant';
 let approvalQueue = [];
 let resolvedTickets = [];
 
-// Nodemailer Transporter
-let transporter = null;
-(async () => {
-  try {
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      // Use real Gmail account if credentials are provided in .env
-      transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        family: 4, // force IPv4 to avoid ENETUNREACH on broken IPv6 networks
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-      console.log('Nodemailer initialized with Gmail credentials.');
-    } else {
-      console.log('No EMAIL_USER provided. OTPs will only be printed to console.');
-    }
-  } catch (error) {
-    console.error('Failed to configure Nodemailer:', error);
-  }
-})();
+// Resend Email Setup
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+  console.log('Resend initialized with API Key.');
+} else {
+  console.log('No RESEND_API_KEY provided. OTPs will only be printed to console.');
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -117,7 +101,7 @@ app.post('/api/auth/register', async (req, res) => {
     res.json({ success: true, user: { id: userId, fullName, email, role } });
   } catch (error) {
     console.error('Registration Error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    res.status(500).json({ error: `Registration failed: ${error.message}` });
   }
 });
 
@@ -293,13 +277,13 @@ app.post('/api/send-otp', async (req, res) => {
       return res.status(400).json({ error: 'Email and OTP are required' });
     }
 
-    if (!transporter) {
+    if (!resend) {
       console.log(`[MOCK EMAIL] To: ${email} | OTP: ${otp}`);
-      return res.json({ success: true, message: 'OTP logged to console (No email credentials configured)' });
+      return res.json({ success: true, message: 'OTP logged to console (No Resend API Key configured)' });
     }
 
-    const info = await transporter.sendMail({
-      from: process.env.EMAIL_USER ? `"AgenticFi Security" <${process.env.EMAIL_USER}>` : '"AgenticFi Security" <security@agenticfi.com>',
+    const { data, error } = await resend.emails.send({
+      from: 'onboarding@resend.dev',
       to: email,
       subject: 'Your AgenticFi Verification Code',
       text: `Welcome to AgenticFi! Your email verification code is: ${otp}`,
@@ -313,17 +297,15 @@ app.post('/api/send-otp', async (req, res) => {
       `
     });
 
-    let previewUrl = null;
-    if (!process.env.EMAIL_USER) {
-      previewUrl = nodemailer.getTestMessageUrl(info);
-      console.log(`Preview URL: ${previewUrl}`);
+    if (error) {
+      console.error('Resend API Error:', error);
+      return res.status(500).json({ error: 'Failed to send OTP via Resend' });
     }
     
-    console.log(`Email sent: ${info.messageId}`);
+    console.log(`Email sent: ${data?.id}`);
 
     res.json({ 
       success: true, 
-      previewUrl,
       message: 'OTP Sent successfully'
     });
   } catch (error) {
