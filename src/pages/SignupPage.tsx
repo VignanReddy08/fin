@@ -430,6 +430,10 @@ export default function SignupPage() {
                   We've sent a 6-digit verification code to <span className="text-white font-medium">{formData.email}</span>
                 </p>
 
+                <div className="bg-primary/10 border border-primary/20 text-primary-foreground/90 p-3 rounded-md text-xs text-left my-4 leading-relaxed">
+                  <strong>⚠️ Notice:</strong> Email delivery is currently disabled due to standard Render free-tier SMTP limitations. Please enter <strong>000000</strong> as the verification code to bypass this step.
+                </div>
+
 
 
                 <div className="py-4">
