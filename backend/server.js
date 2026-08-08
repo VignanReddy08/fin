@@ -10,6 +10,25 @@ import { OAuth2Client } from 'google-auth-library';
 dotenv.config();
 
 const app = express();
+
+app.get('/api/debug-db', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT 1 as connected');
+    res.json({ 
+      success: true, 
+      host: process.env.DB_HOST ? 'Set' : 'Missing',
+      user: process.env.DB_USER ? 'Set' : 'Missing'
+    });
+  } catch (err) {
+    res.status(500).json({ 
+      success: false, 
+      error: err.message,
+      code: err.code,
+      host: process.env.DB_HOST || 'localhost (missing env)'
+    });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 // Middleware
