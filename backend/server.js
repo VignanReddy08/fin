@@ -110,7 +110,7 @@ app.post('/api/auth/register', async (req, res) => {
       INSERT INTO users (id, fullName, email, mobile, password, role, isVerified, emailVerified, profileCompleted)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      userId, fullName, email, mobile || '', hashedPassword, role, 
+      userId, fullName, email, mobile || null, hashedPassword, role, 
       isAdmin, isAdmin, isAdmin
     ]);
     
