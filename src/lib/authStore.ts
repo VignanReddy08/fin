@@ -42,6 +42,12 @@ export interface User {
   department?: string;
   designation?: string;
   profileCompleted?: boolean;
+  avatarUrl?: string;
+  mfaEnabled?: boolean;
+  password?: string;
+  recoveryEmail?: string;
+  recoveryMobile?: string;
+  passwordChangedAt?: string;
 }
 
 export interface Invitation {
@@ -63,6 +69,8 @@ export interface LoginResult {
   user?: User;
   error?: string;
   requiresMFA?: boolean;
+  isLocked?: boolean;
+  lockoutRemaining?: number;
 }
 
 let currentUser: User | null = null;

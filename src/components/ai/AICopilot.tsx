@@ -121,6 +121,7 @@ export default function AICopilot() {
           <motion.div
             drag
             dragMomentum={false}
+            // @ts-ignore - TS types missing for dragHandle
             dragHandle=".drag-handle"
             style={{ x: dragX, y: dragY }}
             initial={{ y: 20, opacity: 0, scale: 0.95 }}

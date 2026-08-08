@@ -66,14 +66,17 @@ export default function InvitationAcceptPage() {
 
   useEffect(() => {
     if (token) {
-      const inv = getInvitationByToken(token);
-      if (inv) {
-        setInvitation(inv);
-        setRecoveryEmail(inv.email);
-        setRecoveryMobile(inv.mobile);
-      } else {
-        setError('Invalid or expired invitation token');
-      }
+      const fetchInv = async () => {
+        const inv = await getInvitationByToken(token);
+        if (inv) {
+          setInvitation(inv);
+          setRecoveryEmail(inv.email);
+          setRecoveryMobile(inv.mobile);
+        } else {
+          setError('Invalid or expired invitation token');
+        }
+      };
+      fetchInv();
     }
   }, [token]);
 
@@ -178,8 +181,8 @@ export default function InvitationAcceptPage() {
   const handleProfileComplete = () => {
     if (!invitation) return;
     setIsLoading(true);
-    setTimeout(() => {
-      const res = acceptInvitation(invitation.token, password);
+    setTimeout(async () => {
+      const res = await acceptInvitation(invitation.token, password);
       setIsLoading(false);
       if (res.success && res.user) {
         // Save extra profile details

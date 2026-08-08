@@ -40,7 +40,7 @@ export function calculateSecurityScore(user: User): SecurityScoreBreakdown {
   if (user.mobileVerified) mobileV = 10;
 
   // Password strength (20 points)
-  const analysis = analyzePassword(user.password);
+  const analysis = analyzePassword(user.password || '');
   pwStrength = Math.min(20, Math.round((analysis.score / 6) * 20));
 
   // Trusted devices set up (15 points)
@@ -147,7 +147,7 @@ export function getSecurityRecommendations(user: User): SecurityRecommendation[]
     });
   }
 
-  const analysis = analyzePassword(user.password);
+  const analysis = analyzePassword(user.password || '');
   if (analysis.score < 5) {
     recs.push({
       id: 'strong-password', title: 'Use a Stronger Password',
