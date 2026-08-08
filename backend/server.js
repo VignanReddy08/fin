@@ -40,23 +40,12 @@ let transporter = null;
           pass: process.env.EMAIL_PASS,
         },
       });
-      console.log('Real Email configuration detected. Using Gmail to send emails.');
+      console.log('Nodemailer initialized with Gmail credentials.');
     } else {
-      // Fallback to Ethereal test account
-      const testAccount = await nodemailer.createTestAccount();
-      transporter = nodemailer.createTransport({
-        host: 'smtp.ethereal.email',
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-      console.log('Ethereal test email ready. (Set EMAIL_USER and EMAIL_PASS in .env for real emails)');
+      console.log('No EMAIL_USER provided. OTPs will only be printed to console.');
     }
-  } catch (err) {
-    console.error('Failed to configure email transporter:', err);
+  } catch (error) {
+    console.error('Failed to configure Nodemailer:', error);
   }
 })();
 
@@ -286,7 +275,8 @@ app.post('/api/send-otp', async (req, res) => {
     }
 
     if (!transporter) {
-      return res.status(500).json({ error: 'Email service not initialized yet' });
+      console.log(`[MOCK EMAIL] To: ${email} | OTP: ${otp}`);
+      return res.json({ success: true, message: 'OTP logged to console (No email credentials configured)' });
     }
 
     const info = await transporter.sendMail({
