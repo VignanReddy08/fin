@@ -8,5 +8,11 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "services": {
+    "frontend": {
+      "root": ".",
+      "framework": "vite"
+    }
+  }
 }
